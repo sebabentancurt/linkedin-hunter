@@ -27,7 +27,7 @@ max_remote_queries = 10
 #                   Run save_session.py --cookies to generate it (required for CI)
 #   "public"      — no session, searches public listings only (limited results)
 #
-session_mode = "persistent"
+session_mode = "public"
 
 # Proxy (optional). Useful to avoid rate-limiting. Example: SOCKS5 over Tor.
 # proxy = "socks5://localhost:9050"
