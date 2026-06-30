@@ -1,0 +1,59 @@
+name: LinkedIn Hunter — Daily Run
+
+on:
+  schedule:
+    - cron: "0 11 * * 1-5"   # Mon–Fri at 11:00 UTC (adjust to your timezone)
+  workflow_dispatch:           # allow manual trigger from the Actions tab
+
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install chromium --with-deps
+
+      # Restore the LinkedIn session cookie file from the repository secret.
+      # To set it up:
+      #   1. Run locally: python3 save_session.py --cookies
+      #   2. Copy the content of linkedin_session.json
+      #   3. Add it as a repository secret named LINKEDIN_SESSION_JSON
+      #      (Settings → Secrets and variables → Actions → New repository secret)
+      - name: Restore session
+        env:
+          LINKEDIN_SESSION_JSON: ${{ secrets.LINKEDIN_SESSION_JSON }}
+        run: echo "$LINKEDIN_SESSION_JSON" > linkedin_session.json
+
+      # Patch config to use cookie-based session (persistent profile won't work in CI)
+      - name: Configure session mode
+        run: |
+          python3 - <<'EOF'
+          import re, pathlib
+          cfg = pathlib.Path("config.toml").read_text()
+          cfg = re.sub(r'^session_mode\s*=.*$', 'session_mode = "cookies"', cfg, flags=re.MULTILINE)
+          pathlib.Path("config.toml").write_text(cfg)
+          EOF
+
+      - name: Run pipeline
+        run: python3 daily.py
+
+      - name: Upload queue and log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linkedin-hunter-output-${{ github.run_number }}
+          path: |
+            linkedin_jobs_queue.json
+            linkedin_jobs_log.csv
+            logs/
+          retention-days: 30

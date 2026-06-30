@@ -1,0 +1,28 @@
+# Session data — never commit these
+linkedin_session.json
+linkedin_user_data/
+
+# Runtime state
+linkedin_seen.json
+linkedin_jobs_queue.json
+linkedin_jobs_log.csv
+
+# Logs
+logs/
+
+# Screenshots
+*.png
+*.jpg
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Editor
+.vscode/
+.idea/
+*.swp

@@ -1,0 +1,237 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# LinkedIn Hunter — configuration
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Minimum score for a job to be queued for Easy Apply
+score_threshold = 8
+
+# Max jobs to process per run (comment out = no limit)
+# max_jobs_per_run = 80
+
+# Console log level: DEBUG shows detail per page, INFO shows summary only (default)
+# log_level = "DEBUG"
+
+# Include LinkedIn "Recommended for you" feed?
+include_recommended = true
+
+# How many remote queries to run per execution (comment out = run all)
+max_remote_queries = 10
+
+
+# ─── Session ──────────────────────────────────────────────────────────────────
+#
+# session_mode options:
+#   "persistent"  — uses a Chromium profile saved in linkedin_user_data/
+#                   Run save_session.py to log in once (recommended)
+#   "cookies"     — loads cookies from linkedin_session.json
+#                   Run save_session.py --cookies to generate it
+#   "public"      — no session, searches public listings only (limited results)
+#
+session_mode = "public"
+
+# Proxy (optional). Useful to avoid rate-limiting. Example: SOCKS5 over Tor.
+# proxy = "socks5://localhost:9050"
+
+
+# ─── Search queries ───────────────────────────────────────────────────────────
+# Customize these to match the roles you are targeting.
+
+# Queries for your local market (combined with geo_id or local_location below)
+search_queries_local = [
+  "software engineer",
+  "backend developer",
+  "senior backend engineer",
+  "tech lead",
+  "full stack engineer",
+]
+
+# Queries for remote/international positions
+search_queries_remote = [
+  "senior backend engineer remote",
+  "tech lead remote",
+  "engineering manager remote",
+  "staff engineer remote",
+  "senior software engineer latam",
+]
+
+
+# ─── Location ─────────────────────────────────────────────────────────────────
+# Local search location. Use one of:
+#   geo_id           — LinkedIn numeric geo ID for precise filtering (recommended)
+#   local_location   — plain text location string (fallback if geo_id not set)
+#
+# To find your geo_id: search for jobs on LinkedIn filtered by your city,
+# then look for "geoId=XXXXXXXXX" in the URL.
+#
+# geo_id         = "102299470"   # example: Buenos Aires
+# local_location = "Buenos Aires, Argentina"
+
+# Bonus score for jobs located in your local area
+local_bonus = 2
+
+# Friendly names used to detect local jobs in the location field
+local_location_names = [
+  # "Buenos Aires",
+  # "CABA",
+]
+
+# Filter radius in km (comment out = no radius filter)
+# distance_km = 50
+
+
+# ─── Scoring ──────────────────────────────────────────────────────────────────
+
+radar_company_bonus      = 4   # bonus if the company is in radar_companies
+preferred_keyword_bonus  = 2   # bonus per preferred keyword found
+avoid_keyword_penalty    = 4   # penalty per avoid keyword found
+
+
+# ─── Companies & keywords ─────────────────────────────────────────────────────
+
+# Companies that get a score bonus
+radar_companies = []
+
+# Companies to skip entirely (spam farms, outsourcing mills, etc.)
+avoid_companies = []
+
+# Keywords in title/description that add points
+preferred_keywords = []
+
+# Keywords in title/description that subtract points
+avoid_keywords = [
+  "junior",
+  "ai trainer",
+  "llm trainer",
+  "customer support",
+]
+
+
+# ─── Scraping limits ──────────────────────────────────────────────────────────
+
+max_recommended_jobs = 100  # max jobs from the "Recommended" feed
+max_pages_per_query  = 4    # pages per query
+
+# How far back to look for job postings:
+posted_within_seconds = 86400    # 1 day  ← use this for daily runs
+# posted_within_seconds = 604800  # 7 days ← use for first bootstrap run
+
+
+# ─── Stack keywords (keyword → score points) ──────────────────────────────────
+# Title matches count double. Tune these to reflect your own skill set.
+
+[stack_keywords]
+python       = 2
+fastapi      = 3
+django       = 1
+flask        = 1
+react        = 2
+typescript   = 1
+javascript   = 1
+"node.js"    = 2
+nodejs       = 2
+docker       = 1
+kubernetes   = 1
+aws          = 2
+gcp          = 2
+azure        = 1
+java         = 2
+"spring boot" = 2
+postgresql   = 1
+mysql        = 1
+mongodb      = 1
+redis        = 1
+llm          = 3
+rag          = 3
+"ai engineer" = 3
+"machine learning" = 1
+"tech lead"  = 2
+"engineering manager" = 2
+senior       = 1
+architect    = 2
+backend      = 1
+microservices = 1
+golang       = 2
+kafka        = 1
+terraform    = 1
+
+
+# ─── Timing (delays in seconds, format [min, max]) ────────────────────────────
+# Increase these values if LinkedIn starts blocking or showing captchas.
+
+[timing]
+page_load_delay               = [1.2, 2.4]
+description_delay             = [1.0, 2.0]
+between_queries_delay         = [2.5, 5.0]
+feed_warmup_delay             = [2.0, 3.5]
+scroll_step_delay             = [0.5, 1.2]
+description_after_fetch_delay = [0.8, 1.8]
+
+
+# ─── CV / Resume ──────────────────────────────────────────────────────────────
+# Option A — single CV (simplest):
+#   Always attach this file. Path is relative to this directory.
+#
+# Option B — multiple CVs with rule-based selection:
+#   Set dir to a folder containing your CV files, then define cv_rules below.
+#   Each rule tries keywords against the job text; first match wins.
+#   Also set a fallback via default.
+
+[cv]
+# path = "resume.pdf"   # ← replace with your CV filename
+
+# dir     = "resumes/"
+# default = "resume_backend.pdf"
+
+# [[cv_rules]]
+# file     = "resume_ai.pdf"
+# keywords = ["llm", "rag", "openai", "machine learning"]
+#
+# [[cv_rules]]
+# file     = "resume_backend.pdf"
+# keywords = ["python", "fastapi", "django", "backend"]
+
+
+# ─── Personal data (Easy Apply form autofill) ─────────────────────────────────
+
+[personal_data]
+firstName = ""
+lastName  = ""
+email     = ""
+phone     = ""
+city      = ""
+country   = ""
+
+
+# ─── Answers to common Easy Apply form questions ──────────────────────────────
+
+[form_answers]
+years_of_experience   = "5"
+work_authorization    = "Yes"
+sponsorship_required  = "No"
+willing_to_relocate   = "No"
+willing_to_commute    = "Yes"
+notice_period_days    = "14"
+english_proficiency   = "Professional"
+education_level       = "Bachelor's Degree"
+currently_employed    = "Yes"
+previously_worked_here = "No"
+
+
+# ─── Candidate profile (used by LLM fallback for unknown form questions) ──────
+# The LLM fallback calls `claude -p` (requires Claude Code installed).
+# Set llm_fallback = false to disable it entirely.
+
+llm_fallback = true
+
+[profile]
+name                = "Your Name"
+years_of_experience = "5"
+stack               = "Python, FastAPI, Node.js, React, AWS, Docker, PostgreSQL"
+location            = "Your City, Country"
+languages           = "English (fluent), Spanish (conversational)"
+
+
+# ─── Screenshots ──────────────────────────────────────────────────────────────
+# Where to save before/after screenshots during Easy Apply.
+# Defaults to the project directory if not set.
+# screenshots_dir = "/path/to/screenshots"
