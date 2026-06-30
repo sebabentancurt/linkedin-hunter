@@ -182,6 +182,53 @@ The first matching rule wins. Falls back to `default` if no rule matches.
 
 ---
 
+## Auto-apply (Easy Apply)
+
+> **⚠ Use with care.** Auto-apply submits real job applications on your behalf. Always review the queue (`linkedin_jobs_queue.json`) before running it, and make sure your personal data, CV, and form answers are correctly configured.
+
+The auto-apply mode reads `linkedin_jobs_queue.json`, opens each `pending` Easy Apply job in a browser, and fills out the form automatically: personal data → CV upload → screening questions → submit.
+
+**Before enabling auto-apply you must configure:**
+
+```toml
+[cv]
+path = "resume.pdf"   # path to your CV file
+
+[personal_data]
+firstName = "Jane"
+lastName  = "Doe"
+email     = "jane@example.com"
+phone     = "+1 555 0100"
+city      = "Buenos Aires"
+country   = "Argentina"
+
+[form_answers]
+years_of_experience = "7"
+work_authorization  = "Yes"
+sponsorship_required = "No"
+english_proficiency = "Professional"
+```
+
+**To run auto-apply:**
+
+```bash
+# First collect jobs into the queue
+python3 daily.py collect
+
+# Review linkedin_jobs_queue.json, then apply
+python3 daily.py apply
+
+# Or apply to a single job directly
+python3 apply.py "https://www.linkedin.com/jobs/view/1234567890/" resume.pdf
+
+# Dry run — fills the form but does not click Submit
+python3 apply.py "https://www.linkedin.com/jobs/view/1234567890/" resume.pdf --dry-run
+```
+
+Jobs that require steps the tool can't handle (multi-page custom forms, file uploads beyond CV) are flagged as `manual` in the queue — you apply to those yourself.
+
+---
+
 ## LLM fallback
 
 For form questions not covered by `[form_answers]`, the tool can call `claude -p` to answer them automatically. This requires [Claude Code](https://claude.ai/code) to be installed and authenticated.
