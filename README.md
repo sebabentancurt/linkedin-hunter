@@ -76,7 +76,9 @@ aws      = 2
 
 See `config.toml` for the full reference with all available options.
 
-### 3. Save your LinkedIn session
+### 3. Save your LinkedIn session *(required only for auto-apply)*
+
+Collecting jobs works without a session — the tool searches public LinkedIn listings. A session is only needed if you want to use **auto-apply**.
 
 ```bash
 python3 save_session.py
@@ -184,7 +186,7 @@ The first matching rule wins. Falls back to `default` if no rule matches.
 
 ## Auto-apply (Easy Apply)
 
-> **⚠ Use with care.** Auto-apply submits real job applications on your behalf. Always review the queue (`linkedin_jobs_queue.json`) before running it, and make sure your personal data, CV, and form answers are correctly configured.
+> **⚠ Use with care.** Auto-apply submits real job applications on your behalf. It requires an active LinkedIn session (run `save_session.py` first). Always review the queue (`linkedin_jobs_queue.json`) before running it, and make sure your personal data, CV, and form answers are correctly configured.
 
 The auto-apply mode reads `linkedin_jobs_queue.json`, opens each `pending` Easy Apply job in a browser, and fills out the form automatically: personal data → CV upload → screening questions → submit.
 
