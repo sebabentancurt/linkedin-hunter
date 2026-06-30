@@ -177,7 +177,10 @@ def _update_queue_status(job_id: str, status: str, queue: list):
 
 # ── CSV log ──────────────────────────────────────────────────────────────────
 
-_CSV_FIELDS = ["date", "jobId", "title", "company", "location", "score", "isEasyApply", "status", "link"]
+_CSV_FIELDS = [
+    "jobId", "empresa", "rol", "ubicacion", "score", "easy_apply",
+    "estado", "cv", "revisado", "primer_visto", "ultimo_visto", "link",
+]
 
 
 def _load_csv() -> dict:
@@ -206,26 +209,30 @@ def _upsert_log(jobs: list, today: str, threshold: int):
         score   = job.get("score", 0)
         is_easy = job.get("isEasyApply", False)
         if score >= threshold and is_easy:
-            status = "Pending"
+            estado = "Pending"
         elif score >= threshold:
-            status = "Manual"
+            estado = "Manual"
         else:
-            status = "Low score"
+            estado = "Low score"
         existing = rows.get(job_id)
-        # Preserve first-seen date and any terminal status (Applied/Error)
         terminal = {"Applied", "Error"}
-        if existing and existing.get("status") in terminal:
+        if existing and existing.get("estado") in terminal:
+            # Solo actualizamos ultimo_visto en jobs terminales
+            existing["ultimo_visto"] = today
             continue
         rows[job_id] = {
-            "date":        existing["date"] if existing else today,
-            "jobId":       job_id,
-            "title":       job.get("title", ""),
-            "company":     job.get("company", ""),
-            "location":    job.get("location", ""),
-            "score":       score,
-            "isEasyApply": is_easy,
-            "status":      status,
-            "link":        job.get("link", ""),
+            "jobId":        job_id,
+            "empresa":      job.get("company", ""),
+            "rol":          job.get("title", ""),
+            "ubicacion":    job.get("location", ""),
+            "score":        score,
+            "easy_apply":   is_easy,
+            "estado":       estado,
+            "cv":           job.get("cv_path", ""),
+            "revisado":     existing.get("revisado", "") if existing else "",
+            "primer_visto": existing["primer_visto"] if existing else today,
+            "ultimo_visto": today,
+            "link":         job.get("link", ""),
         }
     _write_csv(rows)
 
@@ -238,8 +245,10 @@ def _sync_csv_statuses(queue: list):
     for job in queue:
         job_id = job.get("jobId", "")
         csv_status = status_map.get(job["status"])
-        if csv_status and job_id in rows and rows[job_id]["status"] != csv_status:
-            rows[job_id]["status"] = csv_status
+        if csv_status and job_id in rows and rows[job_id]["estado"] != csv_status:
+            rows[job_id]["estado"] = csv_status
+            if csv_status == "Applied":
+                rows[job_id]["cv"] = job.get("cv_path", rows[job_id].get("cv", ""))
             changed = True
     if changed:
         _write_csv(rows)
