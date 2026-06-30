@@ -180,32 +180,69 @@ def _update_queue_status(job_id: str, status: str, queue: list):
 _CSV_FIELDS = ["date", "jobId", "title", "company", "location", "score", "isEasyApply", "status", "link"]
 
 
-def _append_log(jobs: list, today: str, threshold: int):
-    is_new_file = not LOG_FILE.exists()
-    with open(LOG_FILE, "a", newline="", encoding="utf-8") as f:
+def _load_csv() -> dict:
+    """Return existing CSV rows as {jobId: row_dict}."""
+    if not LOG_FILE.exists():
+        return {}
+    with open(LOG_FILE, newline="", encoding="utf-8") as f:
+        return {row["jobId"]: row for row in csv.DictReader(f) if row.get("jobId")}
+
+
+def _write_csv(rows: dict):
+    dir_ = os.path.dirname(LOG_FILE) or "."
+    with tempfile.NamedTemporaryFile("w", dir=dir_, delete=False, suffix=".tmp",
+                                     newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=_CSV_FIELDS, extrasaction="ignore")
-        if is_new_file:
-            writer.writeheader()
-        for job in jobs:
-            score   = job.get("score", 0)
-            is_easy = job.get("isEasyApply", False)
-            if score >= threshold and is_easy:
-                status = "Pending"
-            elif score >= threshold:
-                status = "Manual"
-            else:
-                status = "Low score"
-            writer.writerow({
-                "date":       today,
-                "jobId":      job.get("jobId", ""),
-                "title":      job.get("title", ""),
-                "company":    job.get("company", ""),
-                "location":   job.get("location", ""),
-                "score":      score,
-                "isEasyApply": is_easy,
-                "status":     status,
-                "link":       job.get("link", ""),
-            })
+        writer.writeheader()
+        writer.writerows(rows.values())
+        tmp = f.name
+    os.replace(tmp, str(LOG_FILE))
+
+
+def _upsert_log(jobs: list, today: str, threshold: int):
+    rows = _load_csv()
+    for job in jobs:
+        job_id  = job.get("jobId", "")
+        score   = job.get("score", 0)
+        is_easy = job.get("isEasyApply", False)
+        if score >= threshold and is_easy:
+            status = "Pending"
+        elif score >= threshold:
+            status = "Manual"
+        else:
+            status = "Low score"
+        existing = rows.get(job_id)
+        # Preserve first-seen date and any terminal status (Applied/Error)
+        terminal = {"Applied", "Error"}
+        if existing and existing.get("status") in terminal:
+            continue
+        rows[job_id] = {
+            "date":        existing["date"] if existing else today,
+            "jobId":       job_id,
+            "title":       job.get("title", ""),
+            "company":     job.get("company", ""),
+            "location":    job.get("location", ""),
+            "score":       score,
+            "isEasyApply": is_easy,
+            "status":      status,
+            "link":        job.get("link", ""),
+        }
+    _write_csv(rows)
+
+
+def _sync_csv_statuses(queue: list):
+    """Update CSV statuses to reflect final apply results from the queue."""
+    status_map = {"applied": "Applied", "error": "Error", "manual": "Manual"}
+    rows = _load_csv()
+    changed = False
+    for job in queue:
+        job_id = job.get("jobId", "")
+        csv_status = status_map.get(job["status"])
+        if csv_status and job_id in rows and rows[job_id]["status"] != csv_status:
+            rows[job_id]["status"] = csv_status
+            changed = True
+    if changed:
+        _write_csv(rows)
 
 
 # ── commands ──────────────────────────────────────────────────────────────────
@@ -249,7 +286,7 @@ def cmd_collect():
     log.info(f"  Manual:             {len(manual)}")
     log.info(f"  Low score:          {len(low_score)}")
 
-    _append_log(jobs, today, threshold)
+    _upsert_log(jobs, today, threshold)
     save_queue(jobs, threshold)
 
 
@@ -299,6 +336,7 @@ def cmd_apply():
 
     manual_total = sum(1 for j in queue if j["status"] == "manual")
     log.info(f"=== SUMMARY: applied={applied} manual={manual_total} errors={errors} ===")
+    _sync_csv_statuses(queue)
 
 
 def run():
