@@ -1,8 +1,8 @@
 # LinkedIn Hunter
 
-Automated LinkedIn job search and Easy Apply pipeline.
+Automated LinkedIn job search pipeline with optional Easy Apply automation.
 
-Searches LinkedIn using your configured queries, scores each job against your skill stack, and automatically fills and submits Easy Apply forms — including CV upload, personal data, and common screening questions. Runs daily via GitHub Actions or a local cron job.
+Searches LinkedIn using your configured queries, scores each job against your skill stack, and saves results to a JSON queue and CSV log. **By default it only collects jobs** — the Easy Apply auto-submit is opt-in. Runs daily via GitHub Actions or a local cron job.
 
 ---
 
@@ -10,10 +10,10 @@ Searches LinkedIn using your configured queries, scores each job against your sk
 
 1. **Collect** — searches LinkedIn using your queries, fetches job descriptions, scores each result
 2. **Queue** — high-scoring Easy Apply jobs go into `linkedin_jobs_queue.json`
-3. **Apply** — fills out Easy Apply forms step by step: personal data → CV → screening questions → submit
-4. **Log** — appends all found jobs to `linkedin_jobs_log.csv`
+3. **Log** — appends all found jobs to `linkedin_jobs_log.csv`
+4. **Apply** *(optional)* — fills out Easy Apply forms step by step: personal data → CV → screening questions → submit
 
-Jobs that require manual steps (multi-page forms, custom questions) are flagged as `manual` in the queue.
+The default mode is **collect only**. Auto-apply must be triggered explicitly (see Usage).
 
 ---
 
@@ -95,17 +95,15 @@ python3 check_session.py
 ## Usage
 
 ```bash
-# Full pipeline: search → score → Easy Apply
+# Collect jobs (default — no applications sent)
 python3 daily.py
-
-# Search only (no applications sent)
 python3 daily.py collect
-
-# Apply from the existing queue (no new search)
-python3 daily.py apply
 
 # Full scan — ignore seen jobs, use the full time window from config
 python3 daily.py collect --full
+
+# Apply from the existing queue (requires session + CV configured in config.toml)
+python3 daily.py apply
 
 # Apply to a single job manually
 python3 apply.py "https://www.linkedin.com/jobs/view/1234567890/" resume.pdf
@@ -129,7 +127,7 @@ Queue statuses: `pending` (queued for Easy Apply) · `applied` · `manual` (need
 
 ## GitHub Actions (scheduled runs)
 
-The included workflow runs the pipeline automatically Mon–Fri at 11:00 UTC.
+The included workflow runs the **collect** pipeline automatically Mon–Fri at 11:00 UTC.
 
 ### Setup
 
@@ -199,7 +197,7 @@ location            = "Buenos Aires, Argentina"
 languages           = "Spanish (native), English (fluent)"
 ```
 
-Disable the fallback with `llm_fallback = false`.
+Enable the fallback by setting `llm_fallback = true` in `config.toml`. It is disabled by default.
 
 ---
 
