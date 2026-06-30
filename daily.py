@@ -2,10 +2,10 @@
 LinkedIn Hunter — daily pipeline.
 
 Usage:
-    python3 daily.py                 # collect + apply (full pipeline)
+    python3 daily.py                 # collect only (default)
     python3 daily.py collect         # search and save queue only
-    python3 daily.py apply           # apply from existing queue
     python3 daily.py collect --full  # full scan ignoring seen (uses posted_within_seconds window)
+    python3 daily.py apply           # apply from existing queue (requires session + CV configured)
 """
 import csv
 import json
@@ -308,9 +308,7 @@ def run():
 
 
 if __name__ == "__main__":
-    if CMD == "collect":
-        cmd_collect()
-    elif CMD == "apply":
+    if CMD == "apply":
         cmd_apply()
     else:
-        run()
+        cmd_collect()  # default: collect only (pass "apply" or edit daily.py to enable auto-apply)

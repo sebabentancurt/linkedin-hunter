@@ -22,12 +22,12 @@ max_remote_queries = 10
 #
 # session_mode options:
 #   "persistent"  — uses a Chromium profile saved in linkedin_user_data/
-#                   Run save_session.py to log in once (recommended)
+#                   Run save_session.py to log in once (recommended for local use)
 #   "cookies"     — loads cookies from linkedin_session.json
-#                   Run save_session.py --cookies to generate it
+#                   Run save_session.py --cookies to generate it (required for CI)
 #   "public"      — no session, searches public listings only (limited results)
 #
-session_mode = "public"
+session_mode = "persistent"
 
 # Proxy (optional). Useful to avoid rate-limiting. Example: SOCKS5 over Tor.
 # proxy = "socks5://localhost:9050"
@@ -43,6 +43,9 @@ search_queries_local = [
   "senior backend engineer",
   "tech lead",
   "full stack engineer",
+  "desarrollador backend",
+  "desarrollador full stack",
+  "ingeniero de software",
 ]
 
 # Queries for remote/international positions
@@ -52,6 +55,8 @@ search_queries_remote = [
   "engineering manager remote",
   "staff engineer remote",
   "senior software engineer latam",
+  "backend developer latam",
+  "full stack developer latam",
 ]
 
 
@@ -60,19 +65,34 @@ search_queries_remote = [
 #   geo_id           — LinkedIn numeric geo ID for precise filtering (recommended)
 #   local_location   — plain text location string (fallback if geo_id not set)
 #
-# To find your geo_id: search for jobs on LinkedIn filtered by your city,
-# then look for "geoId=XXXXXXXXX" in the URL.
+# ¿Cómo encontrar tu geo_id?
+#   1. Abrí LinkedIn en el navegador y andá a Jobs (Empleos)
+#   2. Escribí cualquier búsqueda y filtrá por tu ciudad en el campo de ubicación
+#   3. Mirá la URL — va a tener algo como: ...&geoId=100867946&...
+#   4. Ese número es tu geo_id
 #
-# geo_id         = "102299470"   # example: Buenos Aires
-# local_location = "Buenos Aires, Argentina"
+# Ejemplos de geo_id:
+#   100867946  — Montevideo, Uruguay
+#   105763754  — Uruguay (país completo)
+#   102299470  — Buenos Aires, Argentina
+#   100994331  — Argentina (país completo)
+#   104621616  — Santiago, Chile
+#   106057199  — Colombia
+#   101174742  — México
+#   103644278  — Estados Unidos
+#   101165590  — Reino Unido
+#   101282230  — España
+#
+geo_id         = "100867946"   # Montevideo, Uruguay
+# local_location = "Montevideo, Uruguay"  # alternativa si no usás geo_id
 
 # Bonus score for jobs located in your local area
 local_bonus = 2
 
 # Friendly names used to detect local jobs in the location field
 local_location_names = [
-  # "Buenos Aires",
-  # "CABA",
+  "Montevideo",
+  "Uruguay",
 ]
 
 # Filter radius in km (comment out = no radius filter)
@@ -88,14 +108,32 @@ avoid_keyword_penalty    = 4   # penalty per avoid keyword found
 
 # ─── Companies & keywords ─────────────────────────────────────────────────────
 
-# Companies that get a score bonus
-radar_companies = []
+# Companies that get a score bonus (tech companies active in Uruguay)
+radar_companies = [
+  "Mercado Libre",
+  "Globant",
+  "Wtransnet",
+  "TATA Consultancy Services",
+  "Infosys",
+  "Qualitek",
+  "Overactive",
+  "Moovit",
+]
 
 # Companies to skip entirely (spam farms, outsourcing mills, etc.)
-avoid_companies = []
+avoid_companies = [
+  "Manpower",
+  "Adecco",
+]
 
 # Keywords in title/description that add points
-preferred_keywords = []
+preferred_keywords = [
+  "remote",
+  "100% remote",
+  "latam",
+  "equity",
+  "usd",
+]
 
 # Keywords in title/description that subtract points
 avoid_keywords = [
@@ -103,6 +141,8 @@ avoid_keywords = [
   "ai trainer",
   "llm trainer",
   "customer support",
+  "data entry",
+  "call center",
 ]
 
 
@@ -177,7 +217,7 @@ description_after_fetch_delay = [0.8, 1.8]
 #   Also set a fallback via default.
 
 [cv]
-# path = "resume.pdf"   # ← replace with your CV filename
+path = "resume.pdf"   # ← replace with your CV filename
 
 # dir     = "resumes/"
 # default = "resume_backend.pdf"
@@ -194,41 +234,43 @@ description_after_fetch_delay = [0.8, 1.8]
 # ─── Personal data (Easy Apply form autofill) ─────────────────────────────────
 
 [personal_data]
-firstName = ""
-lastName  = ""
-email     = ""
-phone     = ""
-city      = ""
-country   = ""
+firstName = "Juan"
+lastName  = "Pérez"
+email     = "juan.perez@email.com"
+phone     = "+598 99 123 456"
+city      = "Montevideo"
+country   = "Uruguay"
 
 
 # ─── Answers to common Easy Apply form questions ──────────────────────────────
+# These are matched against question text in Easy Apply forms.
+# Values should be strings exactly as you'd type them in the form.
 
 [form_answers]
-years_of_experience   = "5"
-work_authorization    = "Yes"
-sponsorship_required  = "No"
-willing_to_relocate   = "No"
-willing_to_commute    = "Yes"
-notice_period_days    = "14"
-english_proficiency   = "Professional"
-education_level       = "Bachelor's Degree"
-currently_employed    = "Yes"
-previously_worked_here = "No"
+years_of_experience   = "5"          # number as string
+work_authorization    = "Yes"        # "Yes" / "No"
+sponsorship_required  = "No"         # "Yes" / "No"
+willing_to_relocate   = "No"         # "Yes" / "No"
+willing_to_commute    = "Yes"        # "Yes" / "No"
+notice_period_days    = "14"         # days as string, e.g. "0", "14", "30"
+english_proficiency   = "Professional"  # "Basic" / "Conversational" / "Professional" / "Fluent" / "Native"
+education_level       = "Bachelor's Degree"  # "High School" / "Associate's Degree" / "Bachelor's Degree" / "Master's Degree" / "PhD"
+currently_employed    = "Yes"        # "Yes" / "No"
+previously_worked_here = "No"        # "Yes" / "No"
 
 
 # ─── Candidate profile (used by LLM fallback for unknown form questions) ──────
 # The LLM fallback calls `claude -p` (requires Claude Code installed).
-# Set llm_fallback = false to disable it entirely.
+# Set llm_fallback = true to enable it (requires Claude Code CLI logged in).
 
-llm_fallback = true
+llm_fallback = false
 
 [profile]
-name                = "Your Name"
+name                = "Juan Pérez"
 years_of_experience = "5"
 stack               = "Python, FastAPI, Node.js, React, AWS, Docker, PostgreSQL"
-location            = "Your City, Country"
-languages           = "English (fluent), Spanish (conversational)"
+location            = "Montevideo, Uruguay"
+languages           = "Spanish (native), English (professional)"
 
 
 # ─── Screenshots ──────────────────────────────────────────────────────────────
