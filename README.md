@@ -35,15 +35,16 @@ playwright install chromium
 
 ### 2. Configure
 
-Edit `config.toml`:
+Edit `config.toml` with your data. **Do not commit personal data** — add `config.toml` to your `.gitignore` if you fork this repo, or keep your personal fields (email, phone, name) in a separate file excluded from version control.
 
 ```toml
 # Search queries
 search_queries_local  = ["senior backend engineer", "tech lead"]
 search_queries_remote = ["senior backend engineer remote", "tech lead latam"]
 
-# Your local market geo ID (find it in the LinkedIn URL when searching by city)
-geo_id = "102299470"
+# Your local market geo ID — search on LinkedIn, filter by city, grab the
+# geoId=XXXXXXXXX from the URL. Examples: 100867946 (Montevideo), 102299470 (Buenos Aires)
+geo_id = "100867946"
 
 # Your CV
 [cv]
